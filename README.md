@@ -20,3 +20,10 @@ Instructions for setting up infrastructure using Terraform:
   - `terraform show`
 - Destroy Infrastructure
   - `terraform destroy`
+
+Demo commands:
+- go to `/VPCs/0x/`
+- `export AWS_PROFILE=dev`
+- `terraform init && terraform plan`
+- `terraform apply`
+- `terraform destroy`
