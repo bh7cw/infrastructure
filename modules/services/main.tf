@@ -148,6 +148,26 @@ resource "aws_s3_bucket" "b" {
   }
 }
 
+# -------------------------------------------------------------------
+# iam
+resource "aws_iam_policy" "policy" {
+  name        = var.aws_iam_policy_name
+  path        = var.aws_iam_policy_path
+  description = var.aws_iam_policy_description
+
+  policy = var.aws_iam_policy_policy
+}
+
+resource "aws_iam_role" "role" {
+  name = var.aws_iam_role_name
+  assume_role_policy = var.aws_iam_role_assume_role_policy
+}
+
+resource "aws_iam_policy_attachment" "attach" {
+  name       = var.aws_iam_policy_attachment_name
+  roles      = [aws_iam_role.role.name]
+  policy_arn = aws_iam_policy.policy.arn
+}
 
 # -------------------------------------------------------------------
 # ec2 instance
@@ -209,27 +229,6 @@ resource "aws_db_instance" "db" {
   #snapshot_identifier       = ""
   #skip_final_snapshot       = true
   #performance_insights_enabled = false
-}
-
-# -------------------------------------------------------------------
-# iam
-resource "aws_iam_policy" "policy" {
-  name        = var.aws_iam_policy_name
-  path        = var.aws_iam_policy_path
-  description = var.aws_iam_policy_description
-
-  policy = var.aws_iam_policy_policy
-}
-
-resource "aws_iam_role" "role" {
-  name = var.aws_iam_role_name
-  assume_role_policy = var.aws_iam_role_assume_role_policy
-}
-
-resource "aws_iam_policy_attachment" "attach" {
-  name       = var.aws_iam_policy_attachment_name
-  roles      = [aws_iam_role.role.name]
-  policy_arn = aws_iam_policy.policy.arn
 }
 
 # -------------------------------------------------------------------

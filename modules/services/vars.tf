@@ -134,6 +134,47 @@ variable "aws_s3_bucket_storage_class" {
 }
 
 # -------------------------------------------------------------------
+# iam
+variable "aws_iam_policy_name" {
+  type = string
+  default = "WebAppS3"
+}
+
+variable "aws_iam_policy_path" {
+  type = string
+  default = "/"
+}
+
+variable "aws_iam_policy_description" {
+  type = string
+  default = "allow EC2 instances to perform S3 buckets"
+}
+
+variable "aws_iam_policy_policy" {
+  type = string
+  default = <<EOF
+{"Version":"2012-10-17","Statement":[{"Action":["s3:*"],"Effect":"Allow","Resource":["arn:aws:s3:::webapp.jing.zhang","arn:aws:s3:::webapp.jing.zhang/*"]}]}
+EOF
+}
+
+variable "aws_iam_role_name" {
+  type = string
+  default = "EC2-CSYE6225"
+}
+
+variable "aws_iam_role_assume_role_policy" {
+  type = string
+  default = <<EOF
+{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Principal":{"Service":"ec2.amazonaws.com"},"Effect":"Allow","Sid":""}]}
+  EOF
+}
+
+variable "aws_iam_policy_attachment_name" {
+  type = string
+  default = "attachment"
+}
+
+# -------------------------------------------------------------------
 # ec2 instance
 variable "ami_owner" {
   type = string
@@ -220,47 +261,6 @@ variable "rds_allocated_storage" {
 variable "aws_db_instance_final" {
   type    = string
   default = "foo"
-}
-
-# -------------------------------------------------------------------
-# iam
-variable "aws_iam_policy_name" {
-  type = string
-  default = "WebAppS3"
-}
-
-variable "aws_iam_policy_path" {
-  type = string
-  default = "/"
-}
-
-variable "aws_iam_policy_description" {
-  type = string
-  default = "allow EC2 instances to perform S3 buckets"
-}
-
-variable "aws_iam_policy_policy" {
-  type = string
-  default = <<EOF
-{"Version":"2012-10-17","Statement":[{"Action":["s3:*"],"Effect":"Allow","Resource":["arn:aws:s3:::webapp.jing.zhang","arn:aws:s3:::webapp.jing.zhang/*"]}]}
-EOF
-}
-
-variable "aws_iam_role_name" {
-  type = string
-  default = "EC2-CSYE6225"
-}
-
-variable "aws_iam_role_assume_role_policy" {
-  type = string
-  default = <<EOF
-{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Principal":{"Service":"ec2.amazonaws.com"},"Effect":"Allow","Sid":""}]}
-  EOF
-}
-
-variable "aws_iam_policy_attachment_name" {
-  type = string
-  default = "attachment"
 }
 
 # -------------------------------------------------------------------
