@@ -26,7 +26,7 @@ resource "aws_subnet" "subnet123" {
   availability_zone    = element(var.azs,count.index)
   map_public_ip_on_launch = true
   tags = {
-    Name = "${var.aws_security_group_name}-subnet-${var.vers}"
+    Name = "${var.aws_security_group_name}-subnet-${var.vers}-${count.index}"
   }
 }
 
