@@ -170,6 +170,13 @@ resource "aws_iam_policy_attachment" "attach" {
 }
 
 # -------------------------------------------------------------------
+# ssh key pair
+resource "aws_key_pair" "ssh" {
+  key_name   = var.aws_key_pair_name
+  public_key = var.aws_key_pair_key
+}
+
+# -------------------------------------------------------------------
 # ec2 instance
 data "aws_ami" "ami" {
   most_recent = var.tbool
@@ -182,6 +189,7 @@ resource "aws_instance" "ubuntu" {
   vpc_security_group_ids      = [aws_security_group.application.id]
   subnet_id                   = element(aws_subnet.subnet123.*.id,0)
   disable_api_termination     = var.fbool
+  key_name                    = "${aws_key_pair.ssh.id}"
   user_data                   = var.user_data
   
   root_block_device {

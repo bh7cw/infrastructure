@@ -175,6 +175,10 @@ variable "aws_iam_policy_attachment_name" {
 }
 
 # -------------------------------------------------------------------
+# ssh key pair
+
+
+# -------------------------------------------------------------------
 # ec2 instance
 variable "ami_owner" {
   type = string
