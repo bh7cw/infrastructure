@@ -170,6 +170,14 @@ resource "aws_iam_policy_attachment" "attach" {
 }
 
 # -------------------------------------------------------------------
+# aws_iam_instance_profile
+
+resource "aws_iam_instance_profile" "profile" {
+  name = var.aws_iam_instance_profile_name
+  role = aws_iam_role.role.name
+}
+
+# -------------------------------------------------------------------
 # ssh key pair
 resource "aws_key_pair" "ssh" {
   key_name   = var.aws_key_pair_name
@@ -189,7 +197,8 @@ resource "aws_instance" "ubuntu" {
   vpc_security_group_ids      = [aws_security_group.application.id]
   subnet_id                   = element(aws_subnet.subnet123.*.id,0)
   disable_api_termination     = var.fbool
-  key_name                    = "${aws_key_pair.ssh.id}"
+  iam_instance_profile        = aws_iam_instance_profile.profile.name
+  key_name                    = aws_key_pair.ssh.id
   user_data                   = var.user_data
   
   root_block_device {

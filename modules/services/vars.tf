@@ -175,8 +175,23 @@ variable "aws_iam_policy_attachment_name" {
 }
 
 # -------------------------------------------------------------------
-# ssh key pair
+# aws_iam_instance_profile
+variable "aws_iam_instance_profile_name" {
+  type = string
+  default = "profile"
+}
 
+# -------------------------------------------------------------------
+# ssh key pair
+variable "aws_key_pair_name" {
+  type = string
+  default = "ubuntu"
+}
+
+variable "aws_key_pair_key" {
+  type = string
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDoHTdtSqCFc+YCRHJvAFCVru2PmjePatrsuczKYGDP4E/9tNqOUTIZwiG7GYwFJ5Wchh9Ev9VNx6Nf+pfOVEHXSrSPm+9y2NXZYXdycxKrbB5MPb1MWYtb/WyOuwYCFukPVS/T9ctEa6De1NeHJ9xyiwo0yCGIh5YSneUBObxjNXFNE1j0d8lC2qJKyTvXubsI7E4sZp2GmvwNqKtGb1OgX7Eu/RFTdmbScpJ5xAQXYmvWWsK0dR5+40dX4wYtaD4K8ut1cRr6cixborLLhpCibYIKacrTIMIuiykREXj2inVcO7Ut/ZnGTl2uU/YdOgdqzH8zqknV6it7L6Iz5TLn martin@66.local"
+}
 
 # -------------------------------------------------------------------
 # ec2 instance
