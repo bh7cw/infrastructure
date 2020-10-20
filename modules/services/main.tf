@@ -98,6 +98,14 @@ resource "aws_security_group" "database" {
   description = var.aws_security_group_db_desc
   vpc_id      = aws_vpc.vpc.id
 
+  ingress {
+    from_port       = var.db_port
+    to_port         = var.db_port
+    protocol        = var.security_group_protocl_in
+    security_groups = [aws_security_group.application.name]
+    cidr_blocks     = [var.db_cidr_block]
+  }
+
   egress {
     from_port   = var.all_port
     to_port     = var.all_port
@@ -200,6 +208,11 @@ resource "aws_instance" "ubuntu" {
   iam_instance_profile        = aws_iam_instance_profile.profile.name
   key_name                    = aws_key_pair.ssh.id
   user_data                   = var.user_data
+
+  connection {
+    user = var.aws_instance_name
+    host = aws_instance.ubuntu.public_ip
+  }
   
   root_block_device {
     delete_on_termination     = var.tbool

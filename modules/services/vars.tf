@@ -153,7 +153,7 @@ variable "aws_iam_policy_description" {
 variable "aws_iam_policy_policy" {
   type = string
   default = <<EOF
-{"Version":"2012-10-17","Statement":[{"Action":["s3:*"],"Effect":"Allow","Resource":["arn:aws:s3:::webapp.jing.zhang","arn:aws:s3:::webapp.jing.zhang/*"]}]}
+{"Version":"2012-10-17","Statement":[{"Action":["s3:CreateBucket","s3:ListBucket","s3:DeleteBucket","s3:GetObject","s3:PutObject","s3:DeleteObject","s3:GetObjectVersion","s3:GetBucketPolicy","s3:PutBucketPolicy","s3:GetBucketAcl","s3:PutBucketVersioning","s3:GetBucketVersioning","s3:PutLifecycleConfiguration","s3:GetLifecycleConfiguration","s3:DeleteBucketPolicy"],"Effect":"Allow","Resource":["arn:aws:s3:::webapp.jing.zhang","arn:aws:s3:::webapp.jing.zhang/*"]}]}
 EOF
 }
 
