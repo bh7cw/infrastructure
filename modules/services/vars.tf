@@ -182,50 +182,6 @@ variable "aws_iam_instance_profile_name" {
 }
 
 # -------------------------------------------------------------------
-# ssh key pair
-variable "aws_key_pair_name" {
-  type = string
-  default = "ubuntu"
-}
-
-variable "aws_key_pair_key" {
-  type = string
-  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDoHTdtSqCFc+YCRHJvAFCVru2PmjePatrsuczKYGDP4E/9tNqOUTIZwiG7GYwFJ5Wchh9Ev9VNx6Nf+pfOVEHXSrSPm+9y2NXZYXdycxKrbB5MPb1MWYtb/WyOuwYCFukPVS/T9ctEa6De1NeHJ9xyiwo0yCGIh5YSneUBObxjNXFNE1j0d8lC2qJKyTvXubsI7E4sZp2GmvwNqKtGb1OgX7Eu/RFTdmbScpJ5xAQXYmvWWsK0dR5+40dX4wYtaD4K8ut1cRr6cixborLLhpCibYIKacrTIMIuiykREXj2inVcO7Ut/ZnGTl2uU/YdOgdqzH8zqknV6it7L6Iz5TLn martin@66.local"
-}
-
-# -------------------------------------------------------------------
-# ec2 instance
-variable "ami_owner" {
-  type = string
-  default = "918834676735"
-}
-
-variable "aws_instance_instance_type" {
-  type = string
-  default = "t2.micro"
-}
-
-variable "aws_instance_volume_size" {
-  type = number
-  default = 20
-}
-
-variable "aws_instance_volume_type" {
-  type = string
-  default = "gp2"
-}
-
-variable "aws_instance_name" {
-  type = string
-  default = "ubuntu"
-}
-
-variable "user_data" {
-  type = string
-  default = "#!/bin/bash\necho 'hello world'\nexport DB_USERNAME=root\nexport DB_PASSWORD=MysqlPwd123\nexport Bucket_Name=webapp.jing.zhang"
-}
-
-# -------------------------------------------------------------------
 # rds instance
 variable "rds_engine" {
   type    = string
@@ -280,6 +236,57 @@ variable "rds_allocated_storage" {
 variable "aws_db_instance_final" {
   type    = string
   default = "foo"
+}
+
+# -------------------------------------------------------------------
+# ssh key pair
+variable "aws_key_pair_name" {
+  type = string
+  default = "ubuntu"
+}
+
+variable "aws_key_pair_key" {
+  type = string
+  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDoHTdtSqCFc+YCRHJvAFCVru2PmjePatrsuczKYGDP4E/9tNqOUTIZwiG7GYwFJ5Wchh9Ev9VNx6Nf+pfOVEHXSrSPm+9y2NXZYXdycxKrbB5MPb1MWYtb/WyOuwYCFukPVS/T9ctEa6De1NeHJ9xyiwo0yCGIh5YSneUBObxjNXFNE1j0d8lC2qJKyTvXubsI7E4sZp2GmvwNqKtGb1OgX7Eu/RFTdmbScpJ5xAQXYmvWWsK0dR5+40dX4wYtaD4K8ut1cRr6cixborLLhpCibYIKacrTIMIuiykREXj2inVcO7Ut/ZnGTl2uU/YdOgdqzH8zqknV6it7L6Iz5TLn martin@66.local"
+}
+
+# -------------------------------------------------------------------
+# ec2 instance
+variable "ami_owner" {
+  type = string
+  default = "918834676735"
+}
+
+variable "aws_instance_instance_type" {
+  type = string
+  default = "t2.micro"
+}
+
+variable "aws_instance_volume_size" {
+  type = number
+  default = 20
+}
+
+variable "aws_instance_volume_type" {
+  type = string
+  default = "gp2"
+}
+
+variable "aws_instance_name" {
+  type = string
+  default = "ubuntu"
+}
+
+variable "user_data" {
+  type = string
+  default = <<EOF
+#!/bin/bash
+echo export DB_USERNAME="csye6225fall2020" >> /etc/profile
+echo export DB_PASSWORD="MysqlPwd123" >> /etc/profile
+echo export DB_NAME="csye6225" >> /etc/profile
+echo export HOSTNAME=aws_db_instance.db.endpoint >> /etc/profile
+echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
+  EOF
 }
 
 # -------------------------------------------------------------------

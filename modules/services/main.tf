@@ -61,13 +61,6 @@ resource "aws_security_group" "application" {
   name        = var.aws_security_group_app
   description = var.aws_security_group_app_desc
   vpc_id      = aws_vpc.vpc.id
-  
-  ingress {
-    from_port   = var.db_port
-    to_port     = var.db_port
-    protocol    = var.security_group_protocl_in
-    cidr_blocks = [var.db_cidr_block]
-  }
 
   egress {
     from_port   = var.all_port
@@ -91,6 +84,15 @@ resource "aws_security_group_rule" "applicationsgr" {
   security_group_id = aws_security_group.application.id
 }
 
+resource "aws_security_group_rule" "applicationsgr2" {
+  type              = var.security_group_rule_in
+  from_port         = var.db_port
+  to_port           = var.db_port
+  protocol          = var.security_group_protocl_in
+  cidr_blocks       = [var.db_cidr_block]
+  security_group_id = aws_security_group.application.id
+}
+
 # -------------------------------------------------------------------
 # rds aws_security_group
 resource "aws_security_group" "database" {
@@ -102,7 +104,7 @@ resource "aws_security_group" "database" {
     from_port       = var.db_port
     to_port         = var.db_port
     protocol        = var.security_group_protocl_in
-    security_groups = [aws_security_group.application.name]
+    security_groups = [aws_security_group.application.id]
     cidr_blocks     = [var.db_cidr_block]
   }
 
@@ -116,16 +118,6 @@ resource "aws_security_group" "database" {
   tags = {
     Name = var.aws_security_group_db
   }
-}
-
-resource "aws_security_group_rule" "databsesgr" {
-  count             = length(var.aws_security_group_ingress_port)
-  type              = var.security_group_rule_in
-  from_port         = element(var.aws_security_group_ingress_port,count.index)
-  to_port           = element(var.aws_security_group_ingress_port,count.index)
-  protocol          = var.security_group_protocl_in
-  cidr_blocks       = [var.security_group_cidr_block]
-  security_group_id = aws_security_group.database.id
 }
 
 # -------------------------------------------------------------------
@@ -186,46 +178,6 @@ resource "aws_iam_instance_profile" "profile" {
 }
 
 # -------------------------------------------------------------------
-# ssh key pair
-resource "aws_key_pair" "ssh" {
-  key_name   = var.aws_key_pair_name
-  public_key = var.aws_key_pair_key
-}
-
-# -------------------------------------------------------------------
-# ec2 instance
-data "aws_ami" "ami" {
-  most_recent = var.tbool
-  owners = [var.ami_owner]
-}
-
-resource "aws_instance" "ubuntu" {
-  ami                         = data.aws_ami.ami.id
-  instance_type               = var.aws_instance_instance_type
-  vpc_security_group_ids      = [aws_security_group.application.id]
-  subnet_id                   = element(aws_subnet.subnet123.*.id,0)
-  disable_api_termination     = var.fbool
-  iam_instance_profile        = aws_iam_instance_profile.profile.name
-  key_name                    = aws_key_pair.ssh.id
-  user_data                   = var.user_data
-
-  connection {
-    user = var.aws_instance_name
-    host = aws_instance.ubuntu.public_ip
-  }
-  
-  root_block_device {
-    delete_on_termination     = var.tbool
-    volume_size               = var.aws_instance_volume_size
-    volume_type               = var.aws_instance_volume_type
-  } 
-
-  tags = {
-    Name = var.aws_instance_name
-  }
-}
-
-# -------------------------------------------------------------------
 # rds instance
 resource "aws_db_subnet_group" "_" {
   #name       = "aws-subnet-group"
@@ -259,6 +211,55 @@ resource "aws_db_instance" "db" {
   #snapshot_identifier       = ""
   #skip_final_snapshot       = true
   #performance_insights_enabled = false
+}
+
+# -------------------------------------------------------------------
+# ssh key pair
+resource "aws_key_pair" "ssh" {
+  key_name   = var.aws_key_pair_name
+  public_key = var.aws_key_pair_key
+}
+
+# -------------------------------------------------------------------
+# ec2 instance
+data "aws_ami" "ami" {
+  most_recent = var.tbool
+  owners = [var.ami_owner]
+}
+
+resource "aws_instance" "ubuntu" {
+  ami                         = data.aws_ami.ami.id
+  instance_type               = var.aws_instance_instance_type
+  vpc_security_group_ids      = [aws_security_group.application.id]
+  subnet_id                   = element(aws_subnet.subnet123.*.id,0)
+  disable_api_termination     = var.fbool
+  iam_instance_profile        = aws_iam_instance_profile.profile.name
+  key_name                    = aws_key_pair.ssh.id
+  #user_data                   = var.user_data
+
+  user_data                   = <<EOF
+#!/bin/bash
+echo export DB_USERNAME="${var.rds_username}" >> /etc/profile
+echo export DB_PASSWORD="${var.password}" >> /etc/profile
+echo export DB_NAME="${var.aws_dynamodb_table_name}" >> /etc/profile
+echo export HOSTNAME="${aws_db_instance.db.endpoint}" >> /etc/profile
+echo export BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/profile
+  EOF
+
+  connection {
+    user = var.aws_instance_name
+    host = aws_instance.ubuntu.public_ip
+  }
+  
+  root_block_device {
+    delete_on_termination     = var.tbool
+    volume_size               = var.aws_instance_volume_size
+    volume_type               = var.aws_instance_volume_type
+  } 
+
+  tags = {
+    Name = var.aws_instance_name
+  }
 }
 
 # -------------------------------------------------------------------
