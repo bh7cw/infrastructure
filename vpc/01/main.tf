@@ -3,8 +3,8 @@ provider "aws" {
 }
 
 module "services" {
-  source = "../../modules/services"
+  source = "../../modules/vpc"
 
-  vers = "03"
+  vers = "01"
   region = "us-east-1"
 }
