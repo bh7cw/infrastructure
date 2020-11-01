@@ -252,6 +252,11 @@ variable "aws_key_pair_key" {
 
 # -------------------------------------------------------------------
 # ec2 instance
+variable "aws_iam_instance_profile_name" {
+  type = string
+  default = "instance_profile"
+}
+
 variable "ami_owner" {
   type = string
   default = "918834676735"
@@ -287,6 +292,18 @@ echo export DB_NAME="csye6225" >> /etc/profile
 echo export HOSTNAME=aws_db_instance.db.endpoint >> /etc/profile
 echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
   EOF
+}
+
+# -------------------------------------------------------------------
+# DNS record of ec2 public ip
+variable "dns_a_record_zone" {
+  type = string
+  default = "api."+"${env.AWS_PROFILE}"+".bh7cw.me."
+}
+
+variable "dns_a_record_name" {
+  type = string
+  default = "dns_a_record_ec2_public_ip"
 }
 
 # -------------------------------------------------------------------
