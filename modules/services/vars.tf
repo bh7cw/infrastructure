@@ -560,6 +560,50 @@ variable "dns_a_record_ttl" {
 }
 
 # -------------------------------------------------------------------
+# Create CodeDeploy Application
+variable "codedeploy_app_name" {
+  type = string
+  default = "csye6225-webapp"
+}
+
+variable "codedeploy_app_cp" {
+  type = string
+  default = "Server"
+}
+
+# -------------------------------------------------------------------
+# Create CodeDeploy Deployment Group
+variable "codedeploy_deployment_group_name" {
+  type = string
+  default = "csye6225-webapp-deployment"
+}
+
+variable "codedeploy_deployment_group_deployment_style" {
+  type = string
+  default = "IN_PLACE"
+}
+
+variable "codedeploy_deployment_group_deployment_config_name" {
+  type = string
+  default = "CodeDeployDefault.AllAtOnce"
+}
+
+variable "codedeploy_deployment_group_ec2_tag_filter_key" {
+  type = string
+  default = "name"
+}
+
+variable "codedeploy_deployment_group_ec2_tag_filter_type" {
+  type = string
+  default = "KEY_AND_VALUE"
+}
+
+variable "codedeploy_deployment_group_ec2_tag_filter_value" {
+  type = string
+  default = "ubuntu"
+}
+
+# -------------------------------------------------------------------
 # dynamodb
 variable "aws_dynamodb_table_name" {
   type = string
