@@ -222,6 +222,11 @@ resource "aws_key_pair" "ssh" {
 
 # -------------------------------------------------------------------
 # ec2 instance
+resource "aws_iam_instance_profile" "instance_profile" {
+  name = var.aws_iam_instance_profile_name
+  role = "${aws_iam_role.code_deploy_ec2_role.name}"
+}
+
 data "aws_ami" "ami" {
   most_recent = var.tbool
   owners = [var.ami_owner]
@@ -235,7 +240,7 @@ resource "aws_instance" "ubuntu" {
   disable_api_termination     = var.fbool
   iam_instance_profile        = aws_iam_instance_profile.profile.name
   key_name                    = aws_key_pair.ssh.id
-  #user_data                   = var.user_data
+  #iam_instance_profile       = "${aws_iam_instance_profile.instance_profile.name}"
 
   user_data                   = <<EOF
 #!/bin/bash
@@ -260,6 +265,15 @@ echo export BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/profile
   tags = {
     Name = var.aws_instance_name
   }
+}
+
+# -------------------------------------------------------------------
+# DNS record of ec2 public ip
+resource "dns_a_record_set" "dns_a_record" {
+  zone = var.dns_a_record_zone
+  name = var.dns_a_record_name
+  addresses = [aws_instance.ubuntu.public_ip]
+  ttl = 60
 }
 
 # -------------------------------------------------------------------
