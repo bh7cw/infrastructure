@@ -236,11 +236,11 @@ resource "aws_iam_policy_attachment" "attach_code_deploy_ec2_role" {
 //CodeDeployServiceRole
 resource "aws_iam_role" "code_deploy_service_role" {
   name = var.aws_code_deploy_service_role_name
-  assume_role_policy = var.aws_code_deploy_iam_role_assume_role_policy
+  assume_role_policy = var.aws_code_deploy_service_role_assume_role_policy
 }
 
 resource "aws_iam_policy_attachment" "attach_code_deploy_service_role" {
-    name       = var.aws_iam_policy_attachment_code_deploy_service_name
+  name       = var.aws_iam_policy_attachment_code_deploy_service_name
   roles      = [aws_iam_role.code_deploy_service_role.name]
   policy_arn = var.aws_code_deploy_role
 }
@@ -345,34 +345,17 @@ echo export BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/profile
 
 # -------------------------------------------------------------------
 # DNS record of ec2 public ip
-/*provider "dns" {
-  update {
-    server        = "192.168.0.1"
-    key_name      = "dev.bh7cw.me."
-    key_algorithm = "hmac-md5"
-    key_secret    = "3VwZXJzZWNyZXQ="
-  }
-}
-
-resource "dns_a_record_set" "dns_a_record" {
-  zone = var.dns_a_record_zone
+/*resource "aws_route53_zone" "dev" {
   name = var.dns_a_record_name
-  type    = "A"
-  addresses = [aws_instance.ubuntu.public_ip]
-  ttl = "60"
-}
-
-resource "aws_route53_zone" "dev" {
-  name = var.dns_a_record_name
-}
+}*/
 
 resource "aws_route53_record" "dns_a_record" {
-  zone_id = aws_route53_zone.dev.zone_id
+  zone_id = var.hostedzone_zone_id
   name    = var.dns_a_record_name
   type    = var.dns_a_record_type
   ttl     = var.dns_a_record_ttl
   records = [aws_instance.ubuntu.public_ip]
-}*/
+}
 
 # -------------------------------------------------------------------
 # Create CodeDeploy Application
