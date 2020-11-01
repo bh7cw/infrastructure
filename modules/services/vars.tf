@@ -266,7 +266,7 @@ variable "aws_iam_gh-code-deploy-policy_content" {
         "codedeploy:GetApplicationRevision"
       ],
       "Resource": [
-        "arn:aws:codedeploy:us-east-1:918834676735:application:mywebapp"
+        "arn:aws:codedeploy:us-east-1:918834676735:application:csye6225-webapp"
       ]
     },
     {
@@ -392,6 +392,25 @@ variable "aws_code_deploy_iam_role_assume_role_policy" {
           "Action": "sts:AssumeRole",
           "Principal": {
             "Service": "ec2.amazonaws.com"
+          },
+          "Effect": "Allow",
+          "Sid": ""
+        }
+      ]
+    }
+EOF
+}
+
+variable "aws_code_deploy_service_role_assume_role_policy" {
+  type = string
+  default = <<EOF
+{
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Action": "sts:AssumeRole",
+          "Principal": {
+            "Service": "codedeploy.amazonaws.com"
           },
           "Effect": "Allow",
           "Sid": ""
@@ -544,6 +563,11 @@ echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
 
 # -------------------------------------------------------------------
 # DNS record of ec2 public ip
+variable "hostedzone_zone_id" {
+  type = string
+  default = "Z09857512143LTLIXWAC5"
+}
+
 variable "dns_a_record_name" {
   type = string
   default = "api.dev.bh7cw.me."
@@ -557,6 +581,50 @@ variable "dns_a_record_type" {
 variable "dns_a_record_ttl" {
   type = string
   default = "60"
+}
+
+# -------------------------------------------------------------------
+# Create CodeDeploy Application
+variable "codedeploy_app_name" {
+  type = string
+  default = "csye6225-webapp"
+}
+
+variable "codedeploy_app_cp" {
+  type = string
+  default = "Server"
+}
+
+# -------------------------------------------------------------------
+# Create CodeDeploy Deployment Group
+variable "codedeploy_deployment_group_name" {
+  type = string
+  default = "csye6225-webapp-deployment"
+}
+
+variable "codedeploy_deployment_group_deployment_style" {
+  type = string
+  default = "IN_PLACE"
+}
+
+variable "codedeploy_deployment_group_deployment_config_name" {
+  type = string
+  default = "CodeDeployDefault.AllAtOnce"
+}
+
+variable "codedeploy_deployment_group_ec2_tag_filter_key" {
+  type = string
+  default = "name"
+}
+
+variable "codedeploy_deployment_group_ec2_tag_filter_type" {
+  type = string
+  default = "KEY_AND_VALUE"
+}
+
+variable "codedeploy_deployment_group_ec2_tag_filter_value" {
+  type = string
+  default = "ubuntu"
 }
 
 # -------------------------------------------------------------------

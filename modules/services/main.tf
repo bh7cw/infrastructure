@@ -236,11 +236,11 @@ resource "aws_iam_policy_attachment" "attach_code_deploy_ec2_role" {
 //CodeDeployServiceRole
 resource "aws_iam_role" "code_deploy_service_role" {
   name = var.aws_code_deploy_service_role_name
-  assume_role_policy = var.aws_code_deploy_iam_role_assume_role_policy
+  assume_role_policy = var.aws_code_deploy_service_role_assume_role_policy
 }
 
 resource "aws_iam_policy_attachment" "attach_code_deploy_service_role" {
-    name       = var.aws_iam_policy_attachment_code_deploy_service_name
+  name       = var.aws_iam_policy_attachment_code_deploy_service_name
   roles      = [aws_iam_role.code_deploy_service_role.name]
   policy_arn = var.aws_code_deploy_role
 }
@@ -314,9 +314,9 @@ resource "aws_instance" "ubuntu" {
   vpc_security_group_ids      = [aws_security_group.application.id]
   subnet_id                   = element(aws_subnet.subnet123.*.id,0)
   disable_api_termination     = var.fbool
-  iam_instance_profile        = aws_iam_instance_profile.profile.name
+  #iam_instance_profile        = aws_iam_instance_profile.profile.name
   key_name                    = aws_key_pair.ssh.id
-  #iam_instance_profile       = "${aws_iam_instance_profile.instance_profile.name}"
+  iam_instance_profile       = aws_iam_instance_profile.instance_profile.name
 
   user_data                   = <<EOF
 #!/bin/bash
@@ -345,28 +345,55 @@ echo export BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/profile
 
 # -------------------------------------------------------------------
 # DNS record of ec2 public ip
-/*provider "dns" {
-  update {
-    server =      "192.168.8.184"
-    key_name      = "terraform"
-    key_algorithm = "hmac-sha256"
-  }
-}
-
-resource "dns_a_record_set" "dns_a_record" {
-  zone = var.dns_a_record_zone
+/*resource "aws_route53_zone" "dev" {
   name = var.dns_a_record_name
-  type    = "A"
-  addresses = [aws_instance.ubuntu.public_ip]
-  ttl = "60"
 }*/
 
 resource "aws_route53_record" "dns_a_record" {
-  zone_id = "dev.bh7cw.me"
+  zone_id = var.hostedzone_zone_id
   name    = var.dns_a_record_name
   type    = var.dns_a_record_type
   ttl     = var.dns_a_record_ttl
   records = [aws_instance.ubuntu.public_ip]
+}
+
+# -------------------------------------------------------------------
+# Create CodeDeploy Application
+resource "aws_codedeploy_app" "codedeploy_app" {
+  compute_platform = var.codedeploy_app_cp
+  name             = var.codedeploy_app_name
+}
+
+# -------------------------------------------------------------------
+# Create CodeDeploy Deployment Group
+resource "aws_codedeploy_deployment_group" "codedeploy_deployment_group" {
+  app_name              = aws_codedeploy_app.codedeploy_app.name
+  deployment_group_name = var.codedeploy_deployment_group_name
+  service_role_arn      = aws_iam_role.code_deploy_service_role.arn
+  deployment_config_name = var.codedeploy_deployment_group_deployment_config_name
+
+  deployment_style {
+    deployment_type = var.codedeploy_deployment_group_deployment_style
+  }
+
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = var.codedeploy_deployment_group_ec2_tag_filter_key
+      type  = var.codedeploy_deployment_group_ec2_tag_filter_type
+      value = var.codedeploy_deployment_group_ec2_tag_filter_value
+    }
+  }
+
+  /*trigger_configuration {
+    trigger_events     = ["DeploymentFailure"]
+    trigger_name       = "example-trigger"
+    trigger_target_arn = aws_sns_topic.example.arn
+  }*/
+
+  auto_rollback_configuration {
+    enabled = var.fbool
+    # events  = ["DEPLOYMENT_FAILURE"]
+  }
 }
 
 # -------------------------------------------------------------------
