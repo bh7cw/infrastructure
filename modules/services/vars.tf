@@ -356,9 +356,10 @@ variable "aws_iam_gh_ec2_ami_policy_content" {
 EOF
 }
 
+//ghactions changes to cicd
 variable "ghaction_user_name" {
   type = string
-  default = "ghactions"
+  default = "cicd"
 }
 
 variable "aws_iam_policy_attachment_gh_upload_to_s3_name" {
@@ -570,7 +571,7 @@ variable "hostedzone_zone_id" {
 
 variable "dns_a_record_name" {
   type = string
-  default = "api.dev.bh7cw.me."
+  # default = "api.dev.bh7cw.me."
 }
 
 variable "dns_a_record_type" {
@@ -614,7 +615,7 @@ variable "codedeploy_deployment_group_deployment_config_name" {
 
 variable "codedeploy_deployment_group_ec2_tag_filter_key" {
   type = string
-  default = "name"
+  default = "Name"
 }
 
 variable "codedeploy_deployment_group_ec2_tag_filter_type" {
