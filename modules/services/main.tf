@@ -273,7 +273,10 @@ resource "aws_db_instance" "db" {
   name                    = var.rds_name
   engine_version          = var.rds_engine_version
   allocated_storage       = var.rds_allocated_storage
-  final_snapshot_identifier = var.aws_db_instance_final
+  #final_snapshot_identifier = var.aws_db_instance_final
+  final_snapshot_identifier = null
+  snapshot_identifier       = ""
+  skip_final_snapshot       = true
 
   #backup_retention_period = var.rds_backup_retention_period
   #backup_window           = var.rds_backup_window
@@ -283,9 +286,6 @@ resource "aws_db_instance" "db" {
   #storage_type            = var.storage_type
   #allow_major_version_upgrade = false
   #auto_minor_version_upgrade  = true
-  #final_snapshot_identifier = null
-  #snapshot_identifier       = ""
-  #skip_final_snapshot       = true
   #performance_insights_enabled = false
 }
 

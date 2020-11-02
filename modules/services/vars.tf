@@ -255,44 +255,6 @@ variable "aws_iam_gh-code-deploy-policy_description" {
 
 variable "aws_iam_gh-code-deploy-policy_content" {
   type = string
-  default = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:RegisterApplicationRevision",
-        "codedeploy:GetApplicationRevision"
-      ],
-      "Resource": [
-        "arn:aws:codedeploy:us-east-1:918834676735:application:csye6225-webapp"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:CreateDeployment",
-        "codedeploy:GetDeployment"
-      ],
-      "Resource": [
-        "*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:GetDeploymentConfig"
-      ],
-      "Resource": [
-        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.OneAtATime",
-        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.HalfAtATime",
-        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.AllAtOnce"
-      ]
-    }
-  ]
-}
-EOF
 }
 
 //gh-ec2-ami policy
@@ -503,7 +465,7 @@ variable "rds_allocated_storage" {
 
 variable "aws_db_instance_final" {
   type    = string
-  default = "foo"
+  default = "BAR"
 }
 
 # -------------------------------------------------------------------
@@ -566,7 +528,7 @@ echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
 # DNS record of ec2 public ip
 variable "hostedzone_zone_id" {
   type = string
-  default = "Z09857512143LTLIXWAC5"
+  //default = "Z09857512143LTLIXWAC5"
 }
 
 variable "dns_a_record_name" {
