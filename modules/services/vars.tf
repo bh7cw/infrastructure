@@ -189,24 +189,6 @@ variable "aws_iam_codedeploy_ec2_s3_policy_description" {
 
 variable "aws_iam_codedeploy_ec2_s3_policy_content" {
   type = string
-  default = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": [
-                "s3:Get*",
-                "s3:List*"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-              "*",
-              "*"
-              ]
-        }
-    ]
-}
-EOF
 }
 
 # GH-Upload-To-S3 policy
@@ -222,24 +204,6 @@ variable "aws_iam_gh_upload_to_s3_policy_description" {
 
 variable "aws_iam_gh_upload_to_s3_policy_content" {
   type = string
-  default = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:Get*",
-                "s3:List*"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
-}
-EOF
 }
 
 # GH-Code-Deploy policy
@@ -255,44 +219,6 @@ variable "aws_iam_gh-code-deploy-policy_description" {
 
 variable "aws_iam_gh-code-deploy-policy_content" {
   type = string
-  default = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:RegisterApplicationRevision",
-        "codedeploy:GetApplicationRevision"
-      ],
-      "Resource": [
-        "arn:aws:codedeploy:us-east-1:918834676735:application:csye6225-webapp"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:CreateDeployment",
-        "codedeploy:GetDeployment"
-      ],
-      "Resource": [
-        "*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codedeploy:GetDeploymentConfig"
-      ],
-      "Resource": [
-        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.OneAtATime",
-        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.HalfAtATime",
-        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.AllAtOnce"
-      ]
-    }
-  ]
-}
-EOF
 }
 
 //gh-ec2-ami policy
@@ -356,9 +282,10 @@ variable "aws_iam_gh_ec2_ami_policy_content" {
 EOF
 }
 
+//ghactions changes to cicd
 variable "ghaction_user_name" {
   type = string
-  default = "ghactions"
+  default = "cicd"
 }
 
 variable "aws_iam_policy_attachment_gh_upload_to_s3_name" {
@@ -502,7 +429,7 @@ variable "rds_allocated_storage" {
 
 variable "aws_db_instance_final" {
   type    = string
-  default = "foo"
+  default = "BAR"
 }
 
 # -------------------------------------------------------------------
@@ -565,12 +492,12 @@ echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
 # DNS record of ec2 public ip
 variable "hostedzone_zone_id" {
   type = string
-  default = "Z09857512143LTLIXWAC5"
+  //default = "Z09857512143LTLIXWAC5"
 }
 
 variable "dns_a_record_name" {
   type = string
-  default = "api.dev.bh7cw.me."
+  # default = "api.dev.bh7cw.me."
 }
 
 variable "dns_a_record_type" {
@@ -614,7 +541,7 @@ variable "codedeploy_deployment_group_deployment_config_name" {
 
 variable "codedeploy_deployment_group_ec2_tag_filter_key" {
   type = string
-  default = "name"
+  default = "Name"
 }
 
 variable "codedeploy_deployment_group_ec2_tag_filter_type" {
