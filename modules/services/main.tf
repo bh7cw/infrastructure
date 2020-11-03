@@ -214,11 +214,11 @@ resource "aws_iam_policy_attachment" "attach2" {
 }
 
 //attach gh-ec2-ami policy to `ghaction` user
-resource "aws_iam_policy_attachment" "attach3" {
+/*resource "aws_iam_policy_attachment" "attach3" {
   name       = var.aws_iam_policy_attachment_gh_ec2_ami_name
   users      = [var.ghaction_user_name]
   policy_arn = aws_iam_policy.gh-ec2-ami-policy.arn
-}
+}*/
 
 //CodeDeployEC2ServiceRole
 resource "aws_iam_role" "code_deploy_ec2_role" {

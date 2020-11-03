@@ -189,24 +189,6 @@ variable "aws_iam_codedeploy_ec2_s3_policy_description" {
 
 variable "aws_iam_codedeploy_ec2_s3_policy_content" {
   type = string
-  default = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": [
-                "s3:Get*",
-                "s3:List*"
-            ],
-            "Effect": "Allow",
-            "Resource": [
-              "*",
-              "*"
-              ]
-        }
-    ]
-}
-EOF
 }
 
 # GH-Upload-To-S3 policy
@@ -222,24 +204,6 @@ variable "aws_iam_gh_upload_to_s3_policy_description" {
 
 variable "aws_iam_gh_upload_to_s3_policy_content" {
   type = string
-  default = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:PutObject",
-                "s3:Get*",
-                "s3:List*"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
-}
-EOF
 }
 
 # GH-Code-Deploy policy

@@ -41,4 +41,43 @@ module "services" {
   ]
 }
 EOF
+
+  aws_iam_codedeploy_ec2_s3_policy_content = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+              "arn:aws:s3:::codedeploy.dev.bh7cw.me",
+              "arn:aws:s3:::codedeploy.dev.bh7cw.me/*"
+            ]
+        }
+    ]
+}
+EOF
+
+  aws_iam_gh_upload_to_s3_policy_content = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::codedeploy.dev.bh7cw.me",
+                "arn:aws:s3:::codedeploy.dev.bh7cw.me/*"
+            ]
+        }
+    ]
+}
+EOF
 }
