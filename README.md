@@ -34,4 +34,4 @@ Policy:
 - GH-Upload-To-S3 - cicd
   - get/put object from s3 bucket
 - GH-Code-Deploy - cicd
-- gh-ec2-ami - cicd?/ghactions
+- gh-ec2-ami - ghactions

@@ -187,9 +187,9 @@ variable "aws_iam_codedeploy_ec2_s3_policy_description" {
   default = "allows EC2 instances to read data from S3 buckets"
 }
 
-variable "aws_iam_codedeploy_ec2_s3_policy_content" {
+/*variable "aws_iam_codedeploy_ec2_s3_policy_content" {
   type = string
-}
+}*/
 
 # GH-Upload-To-S3 policy
 variable "aws_iam_gh_upload_to_s3_policy_name" {
@@ -202,9 +202,9 @@ variable "aws_iam_gh_upload_to_s3_policy_description" {
   default = "allows GitHub Actions to upload artifacts from latest successful build to dedicated S3 bucket used by CodeDeploy"
 }
 
-variable "aws_iam_gh_upload_to_s3_policy_content" {
+/*variable "aws_iam_gh_upload_to_s3_policy_content" {
   type = string
-}
+}*/
 
 # GH-Code-Deploy policy
 variable "aws_iam_gh-code-deploy-policy_name" {
@@ -217,9 +217,47 @@ variable "aws_iam_gh-code-deploy-policy_description" {
   default = "allows GitHub Actions to call CodeDeploy APIs to initiate application deployment on EC2 instances"
 }
 
-variable "aws_iam_gh-code-deploy-policy_content" {
+/*variable "aws_iam_gh-code-deploy-policy_content" {
   type = string
+  default = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:RegisterApplicationRevision",
+        "codedeploy:GetApplicationRevision"
+      ],
+      "Resource": [
+        "arn:aws:codedeploy:us-east-1:918834676735:application:csye6225-webapp"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:CreateDeployment",
+        "codedeploy:GetDeployment"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:GetDeploymentConfig"
+      ],
+      "Resource": [
+        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.OneAtATime",
+        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.HalfAtATime",
+        "arn:aws:codedeploy:us-east-1:918834676735:deploymentconfig:CodeDeployDefault.AllAtOnce"
+      ]
+    }
+  ]
 }
+EOF
+}*/
 
 //gh-ec2-ami policy
 variable "aws_iam_gh_ec2_ami_policy_name" {
@@ -368,6 +406,11 @@ variable "aws_iam_policy_attachment_code_deploy_service_name" {
   default = "code_deploy_service_role_attach"
 }
 
+variable "attach_s3_to_ec2_attachment_name" {
+  type = string
+  default = "attach_s3_to_ec2_attachment"
+}
+
 # -------------------------------------------------------------------
 # aws_iam_instance_profile
 variable "aws_iam_instance_profile_name" {
@@ -483,22 +526,27 @@ variable "user_data" {
 echo export DB_USERNAME="csye6225fall2020" >> /etc/profile
 echo export DB_PASSWORD="MysqlPwd123" >> /etc/profile
 echo export DB_NAME="csye6225" >> /etc/profile
-echo export HOSTNAME=aws_db_instance.db.endpoint >> /etc/profile
+echo export DBHOSTNAME=aws_db_instance.db.endpoint >> /etc/profile
 echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
   EOF
 }
 
 # -------------------------------------------------------------------
 # DNS record of ec2 public ip
-variable "hostedzone_zone_id" {
+variable "hostedzone" {
   type = string
-  //default = "Z09857512143LTLIXWAC5"
+  default = "dev.bh7cw.me"
 }
 
-variable "dns_a_record_name" {
+variable "env" {
   type = string
-  # default = "api.dev.bh7cw.me."
+  //default = "dev"
 }
+
+/*variable "dns_a_record_name" {
+  type = string
+  //default = "${var.dns_a_record_name_api}.${var.environment}.${var.dns_a_record_name_domain}.${var.dns_a_record_name_tld}."
+}*/
 
 variable "dns_a_record_type" {
   type = string
