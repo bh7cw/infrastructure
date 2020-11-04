@@ -172,24 +172,102 @@ resource "aws_iam_policy_attachment" "attach" {
 # -------------------------------------------------------------------
 # codedeploy plocies
 //CodeDeploy-EC2-S3 policy
+data "aws_s3_bucket" "codedeploy_bucket" {
+  bucket = format("codedeploy.%s.bh7cw.me", var.env)//"codedeploy.dev.bh7cw.me"
+}
+
 resource "aws_iam_policy" "codedeploy-ec2-s3-policy" {
   name        = var.aws_iam_codedeploy_ec2_s3_policy_name
   description = var.aws_iam_codedeploy_ec2_s3_policy_description
-  policy      = var.aws_iam_codedeploy_ec2_s3_policy_content
+  policy      = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+              "${data.aws_s3_bucket.codedeploy_bucket.arn}",
+              "${data.aws_s3_bucket.codedeploy_bucket.arn}/*"
+            ]
+        }
+    ]
+}
+EOF
 }
 
 //GH-Upload-To-S3 policy
 resource "aws_iam_policy" "gh-upload-to-s3-policy" {
   name        = var.aws_iam_gh_upload_to_s3_policy_name
   description = var.aws_iam_gh_upload_to_s3_policy_description
-  policy      = var.aws_iam_gh_upload_to_s3_policy_content
+  policy      = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": [
+                "${data.aws_s3_bucket.codedeploy_bucket.arn}",
+                "${data.aws_s3_bucket.codedeploy_bucket.arn}/*"
+            ]
+        }
+    ]
+}
+EOF
 }
 
 //GH-Code-Deploy policy
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_policy" "gh-code-deploy-policy" {
   name        = var.aws_iam_gh-code-deploy-policy_name
   description = var.aws_iam_gh-code-deploy-policy_description
-  policy      = var.aws_iam_gh-code-deploy-policy_content
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:RegisterApplicationRevision",
+        "codedeploy:GetApplicationRevision"
+      ],
+      "Resource": [
+        "arn:aws:codedeploy:${var.region}:${data.aws_caller_identity.current.account_id}:application:${var.codedeploy_app_name}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:CreateDeployment",
+        "codedeploy:GetDeployment"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codedeploy:GetDeploymentConfig"
+      ],
+      "Resource": [
+        "arn:aws:codedeploy:${var.region}:${data.aws_caller_identity.current.account_id}:deploymentconfig:CodeDeployDefault.OneAtATime",
+        "arn:aws:codedeploy:${var.region}:${data.aws_caller_identity.current.account_id}:deploymentconfig:CodeDeployDefault.HalfAtATime",
+        "arn:aws:codedeploy:${var.region}:${data.aws_caller_identity.current.account_id}:deploymentconfig:CodeDeployDefault.AllAtOnce"
+      ]
+    }
+  ]
+}
+EOF
 }
 
 //gh-ec2-ami policy
@@ -231,6 +309,13 @@ resource "aws_iam_policy_attachment" "attach_code_deploy_ec2_role" {
   name       = var.aws_iam_policy_attachment_code_deploy_ec2_name
   roles      = [aws_iam_role.code_deploy_ec2_role.name]
   policy_arn = aws_iam_policy.codedeploy-ec2-s3-policy.arn
+}
+
+//attach WebAppS3 policy to `CodeDeployEC2ServiceRole` role
+resource "aws_iam_policy_attachment" "attach_s3_to_ec2" {
+  name       = var.attach_s3_to_ec2_attachment_name
+  roles      = [aws_iam_role.code_deploy_ec2_role.name]
+  policy_arn = aws_iam_policy.policy.arn
 }
 
 //CodeDeployServiceRole
@@ -320,11 +405,11 @@ resource "aws_instance" "ubuntu" {
 
   user_data                   = <<EOF
 #!/bin/bash
-echo export DB_USERNAME="${var.rds_username}" >> /etc/profile
-echo export DB_PASSWORD="${var.password}" >> /etc/profile
-echo export DB_NAME="${var.aws_dynamodb_table_name}" >> /etc/profile
-echo export HOSTNAME="${aws_db_instance.db.endpoint}" >> /etc/profile
-echo export BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/profile
+echo DB_USERNAME="${var.rds_username}" >> /etc/environment
+echo DB_PASSWORD="${var.password}" >> /etc/environment
+echo DB_NAME="${var.aws_dynamodb_table_name}" >> /etc/environment
+echo DBHOSTNAME="${aws_db_instance.db.endpoint}" >> /etc/environment
+echo BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/environment
   EOF
 
   connection {
@@ -345,13 +430,14 @@ echo export BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/profile
 
 # -------------------------------------------------------------------
 # DNS record of ec2 public ip
-/*resource "aws_route53_zone" "dev" {
-  name = var.dns_a_record_name
-}*/
+data "aws_route53_zone" "selected" {
+  name         = format("%s.bh7cw.me", var.env)
+  private_zone = var.fbool
+}
 
 resource "aws_route53_record" "dns_a_record" {
-  zone_id = var.hostedzone_zone_id
-  name    = var.dns_a_record_name
+  zone_id = data.aws_route53_zone.selected.zone_id
+  name    = format("api.%s.bh7cw.me.", var.env)
   type    = var.dns_a_record_type
   ttl     = var.dns_a_record_ttl
   records = [aws_instance.ubuntu.public_ip]
