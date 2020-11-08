@@ -318,6 +318,13 @@ resource "aws_iam_policy_attachment" "attach_s3_to_ec2" {
   policy_arn = aws_iam_policy.policy.arn
 }
 
+//attach CloudWatchAgentServerPolicy to `CodeDeployEC2ServiceRole` role
+resource "aws_iam_policy_attachment" "attach_cloud_watch_policy_to_ec2_role" {
+  name       = var.attach_cloud_watch_policy_to_ec2_role_name
+  roles      = [aws_iam_role.code_deploy_ec2_role.name]
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
 //CodeDeployServiceRole
 resource "aws_iam_role" "code_deploy_service_role" {
   name = var.aws_code_deploy_service_role_name

@@ -390,6 +390,11 @@ variable "aws_iam_policy_attachment_code_deploy_ec2_name" {
   default = "code_deploy_iam_role_attach"
 }
 
+variable "attach_cloud_watch_policy_to_ec2_role_name" {
+  type = string
+  default = "cloud_watch_policy_to_ec2_role_attach"
+}
+
 //CodeDeployServiceRole
 variable "aws_code_deploy_service_role_name" {
   type = string
