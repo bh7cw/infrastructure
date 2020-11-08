@@ -1,6 +1,10 @@
 # infrastructure
 Repository for AWS Infrastructure
 
+Credential:
+- no secrets set up in secrets
+- export AWS_PROFILE in local machine to use the credential
+
 Instructions for setting up infrastructure using Terraform:
 - [docs](https://learn.hashicorp.com/collections/terraform/aws-get-started)
 - Install Terraform:
