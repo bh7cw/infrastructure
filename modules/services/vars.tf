@@ -95,6 +95,13 @@ variable "aws_security_group_app_desc" {
 }
 
 # -------------------------------------------------------------------
+# load balancer aws_security_group
+variable "aws_security_group_lb_ingress_port" {
+  type = list(number)
+  default = [80, 443]
+}
+
+# -------------------------------------------------------------------
 # rds aws_security_group
 variable "aws_security_group_db" {
   type = string

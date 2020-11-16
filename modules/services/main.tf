@@ -100,19 +100,22 @@ resource "aws_security_group" "load_balancer" {
   description = "only allow 80 for ingress"
   vpc_id      = aws_vpc.vpc.id
 
-  ingress {
-    from_port       = "80"
-    to_port         = "80"
-    protocol        = var.security_group_protocl_in
-    cidr_blocks     = [var.db_cidr_block]
-  }
-
   egress {
     from_port   = var.all_port
     to_port     = var.all_port
     protocol    = var.security_group_protocl_e
     cidr_blocks = [var.security_group_cidr_block]
   }
+}
+
+resource "aws_security_group_rule" "lb_sgr" {
+  count             = length(var.aws_security_group_lb_ingress_port)
+  type              = var.security_group_rule_in
+  from_port         = element(var.aws_security_group_lb_ingress_port,count.index)
+  to_port           = element(var.aws_security_group_lb_ingress_port,count.index)
+  protocol          = var.security_group_protocl_in
+  cidr_blocks       = [var.security_group_cidr_block]
+  security_group_id = aws_security_group.load_balancer.id
 }
 
 # -------------------------------------------------------------------
