@@ -94,17 +94,16 @@ resource "aws_security_group_rule" "applicationsgr2" {
 }
 
 # -------------------------------------------------------------------
-# rds aws_security_group
-resource "aws_security_group" "database" {
-  name        = var.aws_security_group_db
-  description = var.aws_security_group_db_desc
+# load balancer aws_security_group
+resource "aws_security_group" "load_balancer" {
+  name        = "security-group-lb"
+  description = "only allow 80 for ingress"
   vpc_id      = aws_vpc.vpc.id
 
   ingress {
-    from_port       = var.db_port
-    to_port         = var.db_port
+    from_port       = "80"
+    to_port         = "80"
     protocol        = var.security_group_protocl_in
-    security_groups = [aws_security_group.application.id]
     cidr_blocks     = [var.db_cidr_block]
   }
 
@@ -113,10 +112,6 @@ resource "aws_security_group" "database" {
     to_port     = var.all_port
     protocol    = var.security_group_protocl_e
     cidr_blocks = [var.security_group_cidr_block]
-  }
-
-  tags = {
-    Name = var.aws_security_group_db
   }
 }
 
@@ -145,8 +140,10 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr" {
   from_port         = element(var.aws_security_group_ingress_port,count.index)
   to_port           = element(var.aws_security_group_ingress_port,count.index)
   protocol          = var.security_group_protocl_in
-  cidr_blocks       = [var.security_group_cidr_block]
+  #cidr_blocks       = [var.security_group_cidr_block]
   security_group_id = aws_security_group.autoscale_launch_config.id
+  #security_groups   = [aws_security_group.load_balancer.id]
+  source_security_group_id  = aws_security_group.load_balancer.id
 }
 
 resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
@@ -156,6 +153,33 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
   protocol          = var.security_group_protocl_in
   cidr_blocks       = [var.db_cidr_block]
   security_group_id = aws_security_group.autoscale_launch_config.id
+}
+
+# -------------------------------------------------------------------
+# rds aws_security_group
+resource "aws_security_group" "database" {
+  name        = var.aws_security_group_db
+  description = var.aws_security_group_db_desc
+  vpc_id      = aws_vpc.vpc.id
+
+  ingress {
+    from_port       = var.db_port
+    to_port         = var.db_port
+    protocol        = var.security_group_protocl_in
+    security_groups = [aws_security_group.autoscale_launch_config.id]
+    cidr_blocks     = [var.db_cidr_block]
+  }
+
+  egress {
+    from_port   = var.all_port
+    to_port     = var.all_port
+    protocol    = var.security_group_protocl_e
+    cidr_blocks = [var.security_group_cidr_block]
+  }
+
+  tags = {
+    Name = var.aws_security_group_db
+  }
 }
 
 # -------------------------------------------------------------------
@@ -420,6 +444,37 @@ resource "aws_db_instance" "db" {
 }
 
 # -------------------------------------------------------------------
+# Application Load Balancer
+resource "aws_lb" "app_lb" {
+  name               = var.app_load_balancer_name
+  internal           = var.fbool
+  load_balancer_type = var.app_load_balancer_type
+  security_groups    = [aws_security_group.load_balancer.id]
+  subnets            = aws_subnet.subnet123.*.id
+}
+
+# -------------------------------------------------------------------
+# target group
+resource "aws_lb_target_group" "lb_target_group" {
+  name     = var.lb_target_group_name
+  port     = var.lb_target_group_port
+  protocol = var.app_load_balancer_protocol
+  vpc_id   = aws_vpc.vpc.id
+}
+
+# Application Load Balancer listener
+resource "aws_lb_listener" "app_lb_listener" {
+  load_balancer_arn = aws_lb.app_lb.arn
+  port              = var.app_lb_listener_port
+  protocol          = var.app_load_balancer_protocol
+
+  default_action {
+    type             = var.app_load_balancer_action_type
+    target_group_arn = aws_lb_target_group.lb_target_group.arn
+  }
+}
+
+# -------------------------------------------------------------------
 # ssh key pair
 resource "aws_key_pair" "ssh" {
   key_name   = var.aws_key_pair_name
@@ -497,19 +552,23 @@ echo BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/environment
 # -------------------------------------------------------------------
 # Autoscaling group
 resource "aws_autoscaling_group" "aws_autoscale_gr" {
-  name                 = var.aws_autoscaling_group_name
-  default_cooldown     = 60
-  launch_configuration = aws_launch_configuration.aws_conf.name
-  max_size             = 5
-  min_size             = 3
-  desired_capacity     = 3
-  vpc_zone_identifier  = aws_subnet.subnet123.*.id
+  name                      = var.aws_autoscaling_group_name
+  default_cooldown          = 60
+  launch_configuration      = aws_launch_configuration.aws_conf.name
+  health_check_grace_period = 300
+  health_check_type         = "EC2"
+  max_size                  = 5
+  min_size                  = 3
+  desired_capacity          = 3
+  vpc_zone_identifier       = aws_subnet.subnet123.*.id
 
   tag {
-    key                 = var.aws_autoscaling_group_tag_key
-    value               = var.aws_autoscaling_group_tag_value
-    propagate_at_launch = var.tbool
+    key                     = var.aws_autoscaling_group_tag_key
+    value                   = var.aws_autoscaling_group_tag_value
+    propagate_at_launch     = var.tbool
   }
+
+  target_group_arns         = [aws_lb_target_group.lb_target_group.arn]
 }
 
 # -------------------------------------------------------------------
@@ -568,37 +627,6 @@ resource "aws_cloudwatch_metric_alarm" "cloudwatch_scale_down_alarm" {
     AutoScalingGroupName = aws_autoscaling_group.aws_autoscale_gr.name
   }
   comparison_operator = var.cloudwatch_scale_down_alarm_comparison_operator
-}
-
-# -------------------------------------------------------------------
-# Application Load Balancer
-resource "aws_lb" "app_lb" {
-  name               = var.app_load_balancer_name
-  internal           = var.fbool
-  load_balancer_type = var.app_load_balancer_type
-  security_groups    = [aws_security_group.autoscale_launch_config.id]
-  subnets            = aws_subnet.subnet123.*.id
-}
-
-# -------------------------------------------------------------------
-# target group
-resource "aws_lb_target_group" "lb_target_group" {
-  name     = var.lb_target_group_name
-  port     = var.lb_target_group_port
-  protocol = var.app_load_balancer_protocol
-  vpc_id   = aws_vpc.vpc.id
-}
-
-# Application Load Balancer listener
-resource "aws_lb_listener" "app_lb_listener" {
-  load_balancer_arn = aws_lb.app_lb.arn
-  port              = var.app_lb_listener_port
-  protocol          = var.app_load_balancer_protocol
-
-  default_action {
-    type             = var.app_load_balancer_action_type
-    target_group_arn = aws_lb_target_group.lb_target_group.arn
-  }
 }
 
 # -------------------------------------------------------------------

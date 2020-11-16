@@ -493,6 +493,61 @@ variable "aws_db_instance_final" {
 }
 
 # -------------------------------------------------------------------
+# load balancer
+variable "app_load_balancer_name" {
+  type = string
+  default = "app-load-balancer"
+}
+
+variable "app_load_balancer_type" {
+  type = string
+  default = "application"
+}
+
+# -------------------------------------------------------------------
+# target group
+variable "lb_target_group_name" {
+  type = string
+  default = "lb-target-group"
+}
+
+variable "lb_target_group_port" {
+  type = string
+  default = "8080"
+}
+
+# Application Load Balancer listener
+variable "app_lb_listener_port" {
+  type = string
+  default = "80"
+}
+
+variable "app_load_balancer_protocol" {
+  type = string
+  default = "HTTP"
+}
+
+variable "app_load_balancer_action_type" {
+  type = string
+  default = "forward"
+}
+
+variable "app_load_balancer_action_redirect_path" {
+  type = string
+  default = "/"
+}
+
+variable "app_load_balancer_action_redirect_port" {
+  type = string
+  default = "8080"
+}
+
+variable "app_load_balancer_action_redirect_code" {
+  type = string
+  default = "HTTP_301"
+}
+
+# -------------------------------------------------------------------
 # ssh key pair
 variable "aws_key_pair_name" {
   type = string
@@ -683,61 +738,6 @@ variable "cloudwatch_scale_down_alarm_threshold" {
 variable "cloudwatch_scale_down_alarm_comparison_operator" {
   type = string
   default = "LessThanThreshold"
-}
-
-# -------------------------------------------------------------------
-# load balancer
-variable "app_load_balancer_name" {
-  type = string
-  default = "app-load-balancer"
-}
-
-variable "app_load_balancer_type" {
-  type = string
-  default = "application"
-}
-
-# -------------------------------------------------------------------
-# target group
-variable "lb_target_group_name" {
-  type = string
-  default = "lb-target-group"
-}
-
-variable "lb_target_group_port" {
-  type = string
-  default = "8080"
-}
-
-# Application Load Balancer listener
-variable "app_lb_listener_port" {
-  type = string
-  default = "80"
-}
-
-variable "app_load_balancer_protocol" {
-  type = string
-  default = "HTTP"
-}
-
-variable "app_load_balancer_action_type" {
-  type = string
-  default = "forward"
-}
-
-variable "app_load_balancer_action_redirect_path" {
-  type = string
-  default = "/"
-}
-
-variable "app_load_balancer_action_redirect_port" {
-  type = string
-  default = "8080"
-}
-
-variable "app_load_balancer_action_redirect_code" {
-  type = string
-  default = "HTTP_301"
 }
 
 # -------------------------------------------------------------------
