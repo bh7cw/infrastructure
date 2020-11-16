@@ -519,13 +519,13 @@ variable "lb_target_group_name" {
 }
 
 variable "lb_target_group_port" {
-  type = string
+  type = number
   default = "8080"
 }
 
 # Application Load Balancer listener
 variable "app_lb_listener_port" {
-  type = string
+  type = number
   default = "80"
 }
 
@@ -545,7 +545,7 @@ variable "app_load_balancer_action_redirect_path" {
 }
 
 variable "app_load_balancer_action_redirect_port" {
-  type = string
+  type = number
   default = "8080"
 }
 
