@@ -121,6 +121,44 @@ resource "aws_security_group" "database" {
 }
 
 # -------------------------------------------------------------------
+# Autoscaling Launch Configuration Security Group: WebAppSecurityGroup
+resource "aws_security_group" "autoscale_launch_config" {
+  name        = var.aws_autoscale_launch_config_security_group
+  description = var.aws_security_group_app_desc
+  vpc_id      = aws_vpc.vpc.id
+
+  egress {
+    from_port   = var.all_port
+    to_port     = var.all_port
+    protocol    = var.security_group_protocl_e
+    cidr_blocks = [var.security_group_cidr_block]
+  }
+
+  tags = {
+    Name = var.aws_autoscale_launch_config_security_group
+  }
+}
+
+resource "aws_security_group_rule" "autoscale_launch_config_sgr" {
+  count             = length(var.aws_security_group_ingress_port)
+  type              = var.security_group_rule_in
+  from_port         = element(var.aws_security_group_ingress_port,count.index)
+  to_port           = element(var.aws_security_group_ingress_port,count.index)
+  protocol          = var.security_group_protocl_in
+  cidr_blocks       = [var.security_group_cidr_block]
+  security_group_id = aws_security_group.autoscale_launch_config.id
+}
+
+resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
+  type              = var.security_group_rule_in
+  from_port         = var.db_port
+  to_port           = var.db_port
+  protocol          = var.security_group_protocl_in
+  cidr_blocks       = [var.db_cidr_block]
+  security_group_id = aws_security_group.autoscale_launch_config.id
+}
+
+# -------------------------------------------------------------------
 # s3
 resource "aws_s3_bucket" "b" {
   bucket = var.aws_s3_bucket_name
@@ -400,7 +438,7 @@ data "aws_ami" "ami" {
   owners = [var.ami_owner]
 }
 
-resource "aws_instance" "ubuntu" {
+/*resource "aws_instance" "ubuntu" {
   ami                         = data.aws_ami.ami.id
   instance_type               = var.aws_instance_instance_type
   vpc_security_group_ids      = [aws_security_group.application.id]
@@ -433,6 +471,134 @@ echo BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/environment
   tags = {
     Name = var.aws_instance_name
   }
+}*/
+
+# -------------------------------------------------------------------
+# Autoscaling Launch Configuration for EC2 Instances
+resource "aws_launch_configuration" "aws_conf" {
+  name          = var.aws_launch_configuration_name
+  image_id      = data.aws_ami.ami.id
+  instance_type = "t2.micro"
+  key_name                    = aws_key_pair.ssh.id
+  associate_public_ip_address = var.tbool
+  user_data                   = <<EOF
+#!/bin/bash
+echo DB_USERNAME="${var.rds_username}" >> /etc/environment
+echo DB_PASSWORD="${var.password}" >> /etc/environment
+echo DB_NAME="${var.aws_dynamodb_table_name}" >> /etc/environment
+echo DBHOSTNAME="${aws_db_instance.db.endpoint}" >> /etc/environment
+echo BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/environment
+  EOF
+
+  iam_instance_profile        = aws_iam_instance_profile.instance_profile.name
+  security_groups             = [aws_security_group.autoscale_launch_config.id]
+}
+
+# -------------------------------------------------------------------
+# Autoscaling group
+resource "aws_autoscaling_group" "aws_autoscale_gr" {
+  name                 = var.aws_autoscaling_group_name
+  default_cooldown     = 60
+  launch_configuration = aws_launch_configuration.aws_conf.name
+  max_size             = 5
+  min_size             = 3
+  desired_capacity     = 3
+  vpc_zone_identifier  = aws_subnet.subnet123.*.id
+
+  tag {
+    key                 = var.aws_autoscaling_group_tag_key
+    value               = var.aws_autoscaling_group_tag_value
+    propagate_at_launch = var.tbool
+  }
+}
+
+# -------------------------------------------------------------------
+# Autoscaling group scale up policy
+resource "aws_autoscaling_policy" "autoscaling_scale_up_policy" {
+  name                   = var.aws_autoscaling_scale_up_policy_name
+  scaling_adjustment     = var.aws_autoscaling_scale_up_policy_scaling_adjustment
+  adjustment_type        = var.aws_autoscaling_scale_up_policy_adjustment_type
+  cooldown               = var.aws_autoscaling_scale_up_policy_cooldown
+  autoscaling_group_name = aws_autoscaling_group.aws_autoscale_gr.name
+}
+
+# -------------------------------------------------------------------
+# cloud watch alarm for Autoscaling group scale up policy
+resource "aws_cloudwatch_metric_alarm" "cloudwatch_scale_up_alarm" {
+  alarm_name          = var.cloudwatch_scale_up_alarm_name
+  alarm_description   = var.cloudwatch_scale_up_alarm_description
+  metric_name         = var.cloudwatch_scale_up_alarm_metric_name
+  namespace           = var.cloudwatch_scale_up_alarm_namespace
+  statistic           = var.cloudwatch_scale_up_alarm_statistic
+  period              = var.cloudwatch_scale_up_alarm_period
+  evaluation_periods  = var.cloudwatch_scale_up_alarm_evaluation_periods
+  threshold           = var.cloudwatch_scale_up_alarm_threshold
+  alarm_actions       = [aws_autoscaling_policy.autoscaling_scale_up_policy.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.aws_autoscale_gr.name
+  }
+  comparison_operator = var.cloudwatch_scale_up_alarm_comparison_operator
+}
+
+# -------------------------------------------------------------------
+# Autoscaling group scale down policy
+resource "aws_autoscaling_policy" "autoscaling_scale_down_policy" {
+  name                   = var.aws_autoscaling_scale_down_policy_name
+  scaling_adjustment     = var.aws_autoscaling_scale_down_policy_scaling_adjustment
+  adjustment_type        = var.aws_autoscaling_scale_up_policy_adjustment_type
+  cooldown               = var.aws_autoscaling_scale_up_policy_cooldown
+  autoscaling_group_name = aws_autoscaling_group.aws_autoscale_gr.name
+}
+
+# -------------------------------------------------------------------
+# cloud watch alarm for Autoscaling group scale down policy
+resource "aws_cloudwatch_metric_alarm" "cloudwatch_scale_down_alarm" {
+  alarm_name          = var.cloudwatch_scale_down_alarm_name
+  alarm_description   = var.cloudwatch_scale_down_alarm_description
+  metric_name         = var.cloudwatch_scale_up_alarm_metric_name
+  namespace           = var.cloudwatch_scale_up_alarm_namespace
+  statistic           = var.cloudwatch_scale_up_alarm_statistic
+  period              = var.cloudwatch_scale_up_alarm_period
+  evaluation_periods  = var.cloudwatch_scale_up_alarm_evaluation_periods
+  threshold           = var.cloudwatch_scale_down_alarm_threshold
+  alarm_actions       = [aws_autoscaling_policy.autoscaling_scale_down_policy.arn]
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.aws_autoscale_gr.name
+  }
+  comparison_operator = var.cloudwatch_scale_down_alarm_comparison_operator
+}
+
+# -------------------------------------------------------------------
+# Application Load Balancer
+resource "aws_lb" "app_lb" {
+  name               = var.app_load_balancer_name
+  internal           = var.fbool
+  load_balancer_type = var.app_load_balancer_type
+  security_groups    = [aws_security_group.autoscale_launch_config.id]
+  subnets            = aws_subnet.subnet123.*.id
+}
+
+# -------------------------------------------------------------------
+# target group
+resource "aws_lb_target_group" "lb_target_group" {
+  name     = var.lb_target_group_name
+  port     = var.lb_target_group_port
+  protocol = var.app_load_balancer_protocol
+  vpc_id   = aws_vpc.vpc.id
+}
+
+# Application Load Balancer listener
+resource "aws_lb_listener" "app_lb_listener" {
+  load_balancer_arn = aws_lb.app_lb.arn
+  port              = var.app_lb_listener_port
+  protocol          = var.app_load_balancer_protocol
+
+  default_action {
+    type             = var.app_load_balancer_action_type
+    target_group_arn = aws_lb_target_group.lb_target_group.arn
+  }
 }
 
 # -------------------------------------------------------------------
@@ -442,12 +608,29 @@ data "aws_route53_zone" "selected" {
   private_zone = var.fbool
 }
 
-resource "aws_route53_record" "dns_a_record" {
+/*resource "aws_route53_record" "dns_a_record" {
   zone_id = data.aws_route53_zone.selected.zone_id
   name    = format("api.%s.bh7cw.me.", var.env)
   type    = var.dns_a_record_type
-  ttl     = var.dns_a_record_ttl
-  records = [aws_instance.ubuntu.public_ip]
+  #ttl     = var.dns_a_record_ttl
+  #records = [aws_instance.ubuntu.public_ip]
+  alias {
+    name                   = aws_lb.app_lb.dns_name
+    zone_id                = aws_lb.app_lb.zone_id
+    evaluate_target_health = var.tbool
+  }
+}*/
+
+resource "aws_route53_record" "lb_alias_record" {
+  zone_id = data.aws_route53_zone.selected.zone_id
+  name    = format("%s.bh7cw.me", var.env)
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.app_lb.dns_name
+    zone_id                = aws_lb.app_lb.zone_id
+    evaluate_target_health = var.fbool
+  }
 }
 
 # -------------------------------------------------------------------

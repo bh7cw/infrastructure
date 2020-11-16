@@ -107,6 +107,18 @@ variable "aws_security_group_db_desc" {
 }
 
 # -------------------------------------------------------------------
+# Autoscaling Launch Configuration Security Group: WebAppSecurityGroup
+variable "aws_autoscale_launch_config_security_group" {
+  type = string
+  default = "WebAppSecurityGroup"
+}
+
+variable "aws_autoscale_launch_config_security_group_desc" {
+  type = string
+  default = "security group for Autoscaling Launch Configuration"
+}
+
+# -------------------------------------------------------------------
 # s3
 variable "aws_s3_bucket_name" {
   type = string
@@ -534,6 +546,198 @@ echo export DB_NAME="csye6225" >> /etc/profile
 echo export DBHOSTNAME=aws_db_instance.db.endpoint >> /etc/profile
 echo export BUCKET_NAME="webapp.jing.zhang" >> /etc/profile
   EOF
+}
+
+# -------------------------------------------------------------------
+# Autoscaling Launch Configuration for EC2 Instances
+variable "aws_launch_configuration_name" {
+  type = string
+  default = "asg_launch_config"
+}
+
+# -------------------------------------------------------------------
+# Autoscaling group
+variable "aws_autoscaling_group_name" {
+  type = string
+  default = "aws_autoscaling_group"
+}
+
+variable "aws_autoscaling_group_tag_key" {
+  type = string
+  default = "Name"
+}
+
+variable "aws_autoscaling_group_tag_value" {
+  type = string
+  default = "ubuntu"
+}
+
+# -------------------------------------------------------------------
+# Autoscaling group scale up policy
+variable "aws_autoscaling_scale_up_policy_name" {
+  type = string
+  default = "WebServerScaleUpPolicy"
+}
+
+variable "aws_autoscaling_scale_up_policy_scaling_adjustment" {
+  type = number
+  default = 1
+}
+
+variable "aws_autoscaling_scale_up_policy_adjustment_type" {
+  type = string
+  default = "ChangeInCapacity"
+}
+
+variable "aws_autoscaling_scale_up_policy_cooldown" {
+  type = number
+  default = 60
+}
+
+# -------------------------------------------------------------------
+# Autoscaling group scale down policy
+variable "aws_autoscaling_scale_down_policy_name" {
+  type = string
+  default = "WebServerScaleDownPolicy"
+}
+
+variable "aws_autoscaling_scale_down_policy_scaling_adjustment" {
+  type = number
+  default = -1
+}
+
+# -------------------------------------------------------------------
+# cloud watch alarm for Autoscaling group scale up policy
+variable "cloudwatch_scale_up_alarm_name" {
+  type = string
+  default = "CPUAlarmHigh"
+}
+
+variable "cloudwatch_scale_up_alarm_description" {
+  type = string
+  default = "Scale-up if CPU > 5% for 2 minutes"
+}
+
+variable "cloudwatch_scale_up_alarm_metric_name" {
+  type = string
+  default = "CPUUtilization"
+}
+
+variable "cloudwatch_scale_up_alarm_namespace" {
+  type = string
+  default = "AWS/EC2"
+}
+
+variable "cloudwatch_scale_up_alarm_statistic" {
+  type = string
+  default = "Average"
+}
+
+variable "cloudwatch_scale_up_alarm_period" {
+  type = number
+  default = 60
+}
+
+variable "cloudwatch_scale_up_alarm_evaluation_periods" {
+  type = number
+  default = 2
+}
+
+variable "cloudwatch_scale_up_alarm_threshold" {
+  type = number
+  default = 5
+}
+
+variable "cloudwatch_scale_up_alarm_comparison_operator" {
+  type = string
+  default = "GreaterThanThreshold"
+}
+
+# -------------------------------------------------------------------
+# cloud watch alarm for Autoscaling group scale down policy
+variable "cloudwatch_scale_down_alarm_name" {
+  type = string
+  default = "CPUAlarmLow"
+}
+
+variable "cloudwatch_scale_down_alarm_description" {
+  type = string
+  default = "Scale-down if CPU < 3% for 2 minutes"
+}
+
+variable "cloudwatch_scale_down_alarm_period" {
+  type = number
+  default = 60
+}
+
+variable "cloudwatch_scale_down_alarm_evaluation_periods" {
+  type = number
+  default = 2
+}
+
+variable "cloudwatch_scale_down_alarm_threshold" {
+  type = number
+  default = 3
+}
+
+variable "cloudwatch_scale_down_alarm_comparison_operator" {
+  type = string
+  default = "LessThanThreshold"
+}
+
+# -------------------------------------------------------------------
+# load balancer
+variable "app_load_balancer_name" {
+  type = string
+  default = "app-load-balancer"
+}
+
+variable "app_load_balancer_type" {
+  type = string
+  default = "application"
+}
+
+# -------------------------------------------------------------------
+# target group
+variable "lb_target_group_name" {
+  type = string
+  default = "lb-target-group"
+}
+
+variable "lb_target_group_port" {
+  type = string
+  default = "8080"
+}
+
+# Application Load Balancer listener
+variable "app_lb_listener_port" {
+  type = string
+  default = "80"
+}
+
+variable "app_load_balancer_protocol" {
+  type = string
+  default = "HTTP"
+}
+
+variable "app_load_balancer_action_type" {
+  type = string
+  default = "forward"
+}
+
+variable "app_load_balancer_action_redirect_path" {
+  type = string
+  default = "/"
+}
+
+variable "app_load_balancer_action_redirect_port" {
+  type = string
+  default = "8080"
+}
+
+variable "app_load_balancer_action_redirect_code" {
+  type = string
+  default = "HTTP_301"
 }
 
 # -------------------------------------------------------------------
