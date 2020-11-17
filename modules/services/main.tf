@@ -658,7 +658,7 @@ data "aws_route53_zone" "selected" {
 
 resource "aws_route53_record" "lb_alias_record" {
   zone_id = data.aws_route53_zone.selected.zone_id
-  name    = format("api.%s.bh7cw.me.", var.env)
+  name    = format("%s.bh7cw.me.", var.env)
   type    = "A"
 
   alias {
