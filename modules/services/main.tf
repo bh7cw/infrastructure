@@ -463,6 +463,10 @@ resource "aws_lb_target_group" "lb_target_group" {
   port     = var.lb_target_group_port
   protocol = var.app_load_balancer_protocol
   vpc_id   = aws_vpc.vpc.id
+  health_check{
+    path = "/v1/users"
+    port = 8080
+  }
 }
 
 # Application Load Balancer listener
