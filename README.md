@@ -26,11 +26,18 @@ Instructions for setting up infrastructure using Terraform:
   - `terraform destroy`
 
 Demo commands:
-- go to `/VPCs/0x/`
-- `export AWS_PROFILE=dev`
-- `terraform init && terraform plan`
-- `terraform apply`
-- `terraform destroy`
+- build vpc:
+  - go to `/VPCs/0x/`
+  - `export AWS_PROFILE=dev`
+  - `terraform init && terraform plan`
+  - `terraform apply`
+  - `terraform destroy`
+- build all resources:
+  - `cd modules/services`
+  - `export AWS_PROFILE=prod`
+  - `alias t=terraform`
+  - `t init && t plan -var 'env=prod'`
+  - `t apply -var 'env=prod'`//for dev: `t apply -var 'env=dev'`
 
 Policy:
 - CodeDeploy-EC2-S3 - CodeDeployEC2ServiceRole
