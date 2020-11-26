@@ -55,6 +55,8 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+/* WebAppSecurityGroup is for auto-scaling, while application is for ec2
+we are using auto-scaling instead of ec2, so comment here
 # -------------------------------------------------------------------
 # ec2 aws_security_group
 resource "aws_security_group" "application" {
@@ -92,6 +94,7 @@ resource "aws_security_group_rule" "applicationsgr2" {
   cidr_blocks       = [var.db_cidr_block]
   security_group_id = aws_security_group.application.id
 }
+*/
 
 # -------------------------------------------------------------------
 # load balancer aws_security_group
@@ -149,6 +152,7 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr" {
   source_security_group_id  = aws_security_group.load_balancer.id
 }
 
+/*check later
 resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
   type              = var.security_group_rule_in
   from_port         = var.db_port
@@ -156,7 +160,7 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
   protocol          = var.security_group_protocl_in
   cidr_blocks       = [var.db_cidr_block]
   security_group_id = aws_security_group.autoscale_launch_config.id
-}
+}*/
 
 # -------------------------------------------------------------------
 # rds aws_security_group
@@ -170,7 +174,8 @@ resource "aws_security_group" "database" {
     to_port         = var.db_port
     protocol        = var.security_group_protocl_in
     security_groups = [aws_security_group.autoscale_launch_config.id]
-    cidr_blocks     = [var.db_cidr_block]
+    //check later
+    #cidr_blocks     = [var.db_cidr_block]
   }
 
   egress {
