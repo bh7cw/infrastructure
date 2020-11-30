@@ -677,7 +677,7 @@ variable "cloudwatch_scale_up_alarm_name" {
 
 variable "cloudwatch_scale_up_alarm_description" {
   type = string
-  default = "Scale-up if CPU > 5% for 2 minutes"
+  default = "Scale-up if CPU > 5% for 10 minutes"
 }
 
 variable "cloudwatch_scale_up_alarm_metric_name" {
@@ -700,11 +700,6 @@ variable "cloudwatch_scale_up_alarm_period" {
   default = 60
 }
 
-variable "cloudwatch_scale_up_alarm_evaluation_periods" {
-  type = number
-  default = 2
-}
-
 variable "cloudwatch_scale_up_alarm_threshold" {
   type = number
   default = 5
@@ -724,7 +719,7 @@ variable "cloudwatch_scale_down_alarm_name" {
 
 variable "cloudwatch_scale_down_alarm_description" {
   type = string
-  default = "Scale-down if CPU < 3% for 2 minutes"
+  default = "Scale-down if CPU < 3% for 10 minutes"
 }
 
 variable "cloudwatch_scale_down_alarm_period" {

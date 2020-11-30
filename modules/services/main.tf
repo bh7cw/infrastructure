@@ -55,6 +55,8 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+/* WebAppSecurityGroup is for auto-scaling, while application is for ec2
+we are using auto-scaling instead of ec2, so comment here
 # -------------------------------------------------------------------
 # ec2 aws_security_group
 resource "aws_security_group" "application" {
@@ -92,6 +94,7 @@ resource "aws_security_group_rule" "applicationsgr2" {
   cidr_blocks       = [var.db_cidr_block]
   security_group_id = aws_security_group.application.id
 }
+*/
 
 # -------------------------------------------------------------------
 # load balancer aws_security_group
@@ -149,6 +152,7 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr" {
   source_security_group_id  = aws_security_group.load_balancer.id
 }
 
+/*check later
 resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
   type              = var.security_group_rule_in
   from_port         = var.db_port
@@ -156,7 +160,7 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
   protocol          = var.security_group_protocl_in
   cidr_blocks       = [var.db_cidr_block]
   security_group_id = aws_security_group.autoscale_launch_config.id
-}
+}*/
 
 # -------------------------------------------------------------------
 # rds aws_security_group
@@ -170,7 +174,8 @@ resource "aws_security_group" "database" {
     to_port         = var.db_port
     protocol        = var.security_group_protocl_in
     security_groups = [aws_security_group.autoscale_launch_config.id]
-    cidr_blocks     = [var.db_cidr_block]
+    //check later
+    #cidr_blocks     = [var.db_cidr_block]
   }
 
   egress {
@@ -390,6 +395,35 @@ resource "aws_iam_policy_attachment" "attach_cloud_watch_policy_to_ec2_role" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
+//ssn-publish-message policy
+resource "aws_iam_policy" "ssn-publish-message-policy" {
+  name        = "policy_sns_publish_message"
+  description = "allow to publish message in sns"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Effect": "Allow",
+          "Action": [
+              "sns:Publish"
+          ],
+          "Resource": [
+              "arn:aws:sns:us-east-1:907204364947:topic"
+          ]
+      }
+  ]
+}
+EOF
+}
+
+//attach ssn-publish-message to `CodeDeployEC2ServiceRole` role
+resource "aws_iam_policy_attachment" "attach_sns_publish_policy_to_ec2_role" {
+  name       = "attach_sns_publish_policy_to_ec2_role"
+  roles      = [aws_iam_role.code_deploy_ec2_role.name]
+  policy_arn = aws_iam_policy.ssn-publish-message-policy.arn
+}
+
 //CodeDeployServiceRole
 resource "aws_iam_role" "code_deploy_service_role" {
   name = var.aws_code_deploy_service_role_name
@@ -404,7 +438,6 @@ resource "aws_iam_policy_attachment" "attach_code_deploy_service_role" {
 
 # -------------------------------------------------------------------
 # aws_iam_instance_profile
-
 resource "aws_iam_instance_profile" "profile" {
   name = var.aws_iam_instance_profile_name
   role = aws_iam_role.role.name
@@ -464,8 +497,9 @@ resource "aws_lb_target_group" "lb_target_group" {
   protocol = var.app_load_balancer_protocol
   vpc_id   = aws_vpc.vpc.id
   health_check{
-    path = "/v1/users"
-    port = 8080
+    path     = "/v1/users"
+    port     = 8080
+    interval = 300
   }
 }
 
@@ -597,7 +631,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudwatch_scale_up_alarm" {
   namespace           = var.cloudwatch_scale_up_alarm_namespace
   statistic           = var.cloudwatch_scale_up_alarm_statistic
   period              = var.cloudwatch_scale_up_alarm_period
-  evaluation_periods  = var.cloudwatch_scale_up_alarm_evaluation_periods
+  evaluation_periods  = "10"
   threshold           = var.cloudwatch_scale_up_alarm_threshold
   alarm_actions       = [aws_autoscaling_policy.autoscaling_scale_up_policy.arn]
 
@@ -626,7 +660,7 @@ resource "aws_cloudwatch_metric_alarm" "cloudwatch_scale_down_alarm" {
   namespace           = var.cloudwatch_scale_up_alarm_namespace
   statistic           = var.cloudwatch_scale_up_alarm_statistic
   period              = var.cloudwatch_scale_up_alarm_period
-  evaluation_periods  = var.cloudwatch_scale_up_alarm_evaluation_periods
+  evaluation_periods  = "10"
   threshold           = var.cloudwatch_scale_down_alarm_threshold
   alarm_actions       = [aws_autoscaling_policy.autoscaling_scale_down_policy.arn]
 
@@ -719,4 +753,94 @@ resource "aws_dynamodb_table" "table" {
     name = var.aws_dynamodb_table_key
     type = var.aws_dynamodb_table_type
   }
+}
+
+# -------------------------------------------------------------------
+# sns topic
+resource "aws_sns_topic" "sns_topic" {
+  name = "topic"
+}
+
+# -------------------------------------------------------------------
+# lambda basic execution role
+resource "aws_iam_role" "lambda_basic_execution_role" {
+  name = "lambda_basic_execution_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "lambda_policy"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:*",
+                "ses:*",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
+//attach aws_iam_role policy to lambda basic execution role
+resource "aws_iam_policy_attachment" "attach_ses_db_lambda_basic_execution_role" {
+  name       = "attach_ses_dynomodb_lambda_basic_execution_role"
+  roles      = [aws_iam_role.lambda_basic_execution_role.name]
+  policy_arn = aws_iam_policy.lambda_policy.arn
+}
+
+# -------------------------------------------------------------------
+# lambda function
+resource "aws_lambda_function" "lambda_func" {
+  #filename      = "function.zip"
+  function_name = "CDFunc"
+  role          = aws_iam_role.lambda_basic_execution_role.arn
+  handler       = "main"
+  s3_bucket     = format("codedeploy.%s.bh7cw.me", var.env)
+  s3_key        = "function.zip"
+
+  #source_code_hash = filebase64sha256("function.zip")
+
+  runtime = "go1.x"
+}
+
+# -------------------------------------------------------------------
+# add sns trigger to lambda
+resource "aws_lambda_permission" "with_sns" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_func.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.sns_topic.arn
+}
+
+# -------------------------------------------------------------------
+# add sns subscription to lambda
+resource "aws_sns_topic_subscription" "lambda_subscription" {
+  topic_arn            = aws_sns_topic.sns_topic.arn
+  protocol             = "LAMBDA"
+  endpoint             = aws_lambda_function.lambda_func.arn
 }
