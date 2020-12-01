@@ -868,7 +868,7 @@ resource "aws_iam_policy" "aws-deploy-lambda-policy" {
               "lambda:UpdateFunctionCode"
           ],
           "Resource": [
-              "arn:aws:lambda:us-east-1:907204364947:function:CDFunc"
+              "arn:aws:lambda:${var.region}:${data.aws_caller_identity.current.account_id}:function:CDFunc"
           ]
       }
   ]
