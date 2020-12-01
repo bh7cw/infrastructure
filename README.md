@@ -28,7 +28,7 @@ Instructions for setting up infrastructure using Terraform:
 Demo commands:
 - build vpc:
   - go to `/VPCs/0x/`
-  - `export AWS_PROFILE=dev`
+  - `export AWS_PROFILE=prod` //for dev: `export AWS_PROFILE=dev`
   - `terraform init && terraform plan`
   - `terraform apply`
   - `terraform destroy`
