@@ -844,3 +844,42 @@ resource "aws_sns_topic_subscription" "lambda_subscription" {
   protocol             = "LAMBDA"
   endpoint             = aws_lambda_function.lambda_func.arn
 }
+
+# -------------------------------------------------------------------
+# attach GH-Upload-To-S3 policy to `cicd_lambda` user
+resource "aws_iam_policy_attachment" "cicd_lambda_attach1" {
+  name       = "policy_attachment_s3_cicd_lambda_name"
+  users      = ["cicd_lambda"]
+  policy_arn = aws_iam_policy.gh-upload-to-s3-policy.arn
+}
+
+# -------------------------------------------------------------------
+# create aws_deploy_lambda policy
+resource "aws_iam_policy" "aws-deploy-lambda-policy" {
+  name        = "aws_deploy_lambda_policy"
+  description = "allow aws cli to deploy lambda application"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Effect": "Allow",
+          "Action": [
+              "lambda:UpdateFunctionCode"
+          ],
+          "Resource": [
+              "arn:aws:lambda:us-east-1:907204364947:function:CDFunc"
+          ]
+      }
+  ]
+}
+EOF
+}
+
+# -------------------------------------------------------------------
+# attach aws_deploy_lambda policy to `cicd_lambda` user
+resource "aws_iam_policy_attachment" "cicd_lambda_attach2" {
+  name       = "policy_attachment_aws_cicd_lambda_name"
+  users      = ["cicd_lambda"]
+  policy_arn = aws_iam_policy.aws-deploy-lambda-policy.arn
+}
