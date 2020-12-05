@@ -451,7 +451,7 @@ variable "rds_engine" {
 
 variable "rds_instance_class" {
   type    = string
-  default = "db.t2.micro"
+  default = "db.t3.micro"
 }
 
 variable "multi_az" {

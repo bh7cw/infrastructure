@@ -444,6 +444,14 @@ resource "aws_iam_instance_profile" "profile" {
 }
 
 # -------------------------------------------------------------------
+# ssl vertificate
+# Find a certificate that is issued
+data "aws_acm_certificate" "issued" {
+  domain   = format("%s.bh7cw.me", var.env)
+  statuses = ["ISSUED"]
+}
+
+# -------------------------------------------------------------------
 # rds instance
 resource "aws_db_subnet_group" "_" {
   #name       = "aws-subnet-group"
@@ -467,6 +475,8 @@ resource "aws_db_instance" "db" {
   final_snapshot_identifier = null
   snapshot_identifier       = ""
   skip_final_snapshot       = true
+  storage_encrypted         = true
+  ca_cert_identifier        = "rds-ca-2019"
 
   #backup_retention_period = var.rds_backup_retention_period
   #backup_window           = var.rds_backup_window
@@ -503,11 +513,24 @@ resource "aws_lb_target_group" "lb_target_group" {
   }
 }
 
-# Application Load Balancer listener
-resource "aws_lb_listener" "app_lb_listener" {
+# Application Load Balancer listener: http-80
+/*resource "aws_lb_listener" "app_lb_listener" {
   load_balancer_arn = aws_lb.app_lb.arn
   port              = var.app_lb_listener_port
   protocol          = var.app_load_balancer_protocol
+
+  default_action {
+    type             = var.app_load_balancer_action_type
+    target_group_arn = aws_lb_target_group.lb_target_group.arn
+  }
+}*/
+
+# Application Load Balancer listener: https-443
+resource "aws_lb_listener" "app_lb_listener_https" {
+  load_balancer_arn = aws_lb.app_lb.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  certificate_arn   = data.aws_acm_certificate.issued.arn
 
   default_action {
     type             = var.app_load_balancer_action_type
