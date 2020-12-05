@@ -611,6 +611,12 @@ echo BUCKET_NAME="${var.aws_s3_bucket_name}" >> /etc/environment
 
   iam_instance_profile        = aws_iam_instance_profile.instance_profile.name
   security_groups             = [aws_security_group.autoscale_launch_config.id]
+
+  root_block_device {
+    volume_type            = "gp2"
+    volume_size            = 20
+    delete_on_termination  = true
+  }
 }
 
 # -------------------------------------------------------------------
