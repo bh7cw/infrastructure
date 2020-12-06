@@ -476,8 +476,7 @@ resource "aws_db_instance" "db" {
   snapshot_identifier       = ""
   skip_final_snapshot       = true
   storage_encrypted         = true
-  ca_cert_identifier        = "e5de6630-b568-407c-9251-6ea44772b6ee"
-  #ca_cert_identifier        = "rds-ca-2019"
+  ca_cert_identifier        = "rds-ca-2019"
 
   #backup_retention_period = var.rds_backup_retention_period
   #backup_window           = var.rds_backup_window
@@ -871,7 +870,7 @@ resource "aws_lambda_permission" "with_sns" {
 # add sns subscription to lambda
 resource "aws_sns_topic_subscription" "lambda_subscription" {
   topic_arn            = aws_sns_topic.sns_topic.arn
-  protocol             = "LAMBDA"
+  protocol             = "lambda"
   endpoint             = aws_lambda_function.lambda_func.arn
 }
 
