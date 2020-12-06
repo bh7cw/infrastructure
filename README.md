@@ -46,3 +46,23 @@ Policy:
   - get/put object from s3 bucket
 - GH-Code-Deploy - cicd
 - gh-ec2-ami - ghactions
+
+SSL:
+1. prepare ssl: get private key and CSR
+- [namecheap](https://www.namecheap.com/support/knowledgebase/article.aspx/9592/14/generating-a-csr-on-amazon-web-services-aws/)
+- commands:
+```
+sudo openssl genrsa -out private.key 2048 # generate the private key
+sudo openssl req -new -key private.key -out csr.pem # generate CSR based on the Private Key
+```
+2. activate on namecheap
+3. set up CNAME in DNS, in my case: it's in aws route53
+4. install ssl: import in aws certificate manager
+- [namecheap](https://www.namecheap.com/support/knowledgebase/article.aspx/9593/33/installing-an-ssl-certificate-on-amazon-web-services-aws/)
+5. Set up in load balancer: two options
+- Load Balancers menu >> Listeners >> View/edit certificates
+- Command:
+```
+aws elb set-load-balancer-listener-ssl-certificate --load-balancer-name my-loadbalancer --load-balancer-port 443 --ssl-certificate-id arn:aws:iam::123456789012:server-certificate/certificate_object_name
+```
+Parameter my-loadbalancer is the name of your load balancer.
