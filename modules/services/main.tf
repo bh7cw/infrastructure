@@ -458,8 +458,7 @@ resource "aws_db_parameter_group" "pg" {
   family = "mysql8.0"
 
   parameter {
-    apply_method = "immediate"
-    #"pending-reboot"
+    apply_method = "pending-reboot"
     name         = "performance_schema"
     value        = "1"
   }
