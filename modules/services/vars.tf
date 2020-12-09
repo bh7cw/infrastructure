@@ -471,7 +471,7 @@ variable "rds_username" {
 
 variable "password" {
   type    = string
-  default = "MysqlPwd123"
+  default = "Znt9yjNTp5NR"
 }
 
 variable "rds_publicly_accessible" {

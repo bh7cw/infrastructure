@@ -152,8 +152,8 @@ resource "aws_security_group_rule" "autoscale_launch_config_sgr" {
   source_security_group_id  = aws_security_group.load_balancer.id
 }
 
-/*check later
-resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
+//check later
+/*resource "aws_security_group_rule" "autoscale_launch_config_sgr2" {
   type              = var.security_group_rule_in
   from_port         = var.db_port
   to_port           = var.db_port
@@ -444,11 +444,25 @@ resource "aws_iam_instance_profile" "profile" {
 }
 
 # -------------------------------------------------------------------
-# ssl vertificate
+# ssl certificate
 # Find a certificate that is issued
 data "aws_acm_certificate" "issued" {
   domain   = format("%s.bh7cw.me", var.env)
   statuses = ["ISSUED"]
+}
+
+# -------------------------------------------------------------------
+# rds instance parameter_group
+resource "aws_db_parameter_group" "pg" {
+  name   = "pg"
+  family = "mysql8.0"
+
+  parameter {
+    apply_method = "immediate"
+    #"pending-reboot"
+    name         = "performance_schema"
+    value        = "1"
+  }
 }
 
 # -------------------------------------------------------------------
@@ -475,8 +489,10 @@ resource "aws_db_instance" "db" {
   final_snapshot_identifier = null
   snapshot_identifier       = ""
   skip_final_snapshot       = true
+  apply_immediately         = true
   storage_encrypted         = true
   ca_cert_identifier        = "rds-ca-2019"
+  parameter_group_name      = aws_db_parameter_group.pg.id
 
   #backup_retention_period = var.rds_backup_retention_period
   #backup_window           = var.rds_backup_window
@@ -486,7 +502,7 @@ resource "aws_db_instance" "db" {
   #storage_type            = var.storage_type
   #allow_major_version_upgrade = false
   #auto_minor_version_upgrade  = true
-  #performance_insights_enabled = false
+  #performance_insights_enabled = true
 }
 
 # -------------------------------------------------------------------
